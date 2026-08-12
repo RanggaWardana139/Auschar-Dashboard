@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auschar Shipment Plan 2026 Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{--bg:#EEF2F7;--ink:#1B1B1B;--navy:#1e3b5c;--blue:#83abd6;--mid:#4f6f99;--ash:#5B6B7B;--line:#DCE3EC;--card:#FFFFFF;--grid:#E8EDF3;--grey:#9aa6b2;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Calibri,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 22px 60px}
+header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:3px solid var(--navy);padding-bottom:18px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--blue));display:grid;place-items:center;color:#fff;font-size:22px;box-shadow:0 4px 14px rgba(30,59,92,.28)}
+h1{font-size:22px;font-weight:700;letter-spacing:-.3px;line-height:1.1;color:var(--navy)}
+.sub{font-size:12.5px;color:var(--ash);margin-top:3px;letter-spacing:.2px}
+.ctrl{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.ctrl label{font-size:11px;color:var(--ash);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.ctrl input{width:60px;border:1px solid var(--line);border-radius:6px;padding:5px 7px;font-size:14px;font-weight:600;color:var(--navy);text-align:center}
+.filterbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--navy);border-radius:12px;padding:12px 16px;margin-bottom:18px}
+.filterbar .flab{font-size:12px;color:#cfe0f2;text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.bseg{display:flex;gap:5px;background:rgba(255,255,255,.10);border-radius:9px;padding:4px}
+.bseg button{border:0;background:transparent;font-size:13px;font-weight:600;color:#dce8f5;padding:7px 16px;border-radius:7px;cursor:pointer;font-family:inherit}
+.bseg button.on{background:#fff;color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:26px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--navy)}
+.kpi.t::before{background:var(--blue)} .kpi.g::before{background:var(--navy)} .kpi.a::before{background:var(--mid)} .kpi.s::before{background:var(--grey)}
+.kpi .v{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1;color:var(--navy)}
+.kpi .l{font-size:11px;color:var(--ash);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi .x{font-size:11px;color:var(--ash);margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px}
+.panel h2{font-size:14px;font-weight:700;letter-spacing:-.2px;color:var(--navy)}
+.panel .note{font-size:11.5px;color:var(--ash);margin-top:2px;margin-bottom:10px}
+.panel .head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.seg{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px}
+.seg button{border:0;background:transparent;font-size:11px;font-weight:600;color:var(--ash);padding:4px 9px;border-radius:6px;cursor:pointer;letter-spacing:.2px;font-family:inherit}
+.seg button.on{background:var(--navy);color:#fff}
+.cv{position:relative;width:100%;height:300px;margin-top:6px}
+.cv.tall{height:340px}
+.req{display:inline-block;font-size:9.5px;font-weight:700;color:#fff;background:var(--navy);border-radius:4px;padding:2px 6px;letter-spacing:.5px;vertical-align:middle;margin-left:8px}
+.span12{grid-column:span 12}.span8{grid-column:span 8}.span6{grid-column:span 6}.span4{grid-column:span 4}.span5{grid-column:span 5}.span7{grid-column:span 7}
+.tblwrap{overflow-x:auto;margin-top:8px}
+table.wt{border-collapse:collapse;width:100%;font-size:12px}
+table.wt th,table.wt td{border:1px solid var(--line);padding:6px 9px;text-align:right;white-space:nowrap}
+table.wt thead th{background:var(--navy);color:#fff;font-weight:700;text-align:right}
+table.wt th.pl,table.wt td.pl{text-align:left;font-weight:600;color:var(--ink)}
+table.wt tbody tr:nth-child(even){background:#F6F9FC}
+table.wt td.gt,table.wt th.gt{font-weight:700;color:var(--navy);background:#EAF1F8}
+table.wt tfoot td{font-weight:700;background:var(--blue);color:var(--navy);border-color:#fff}
+.foot{margin-top:30px;font-size:11px;color:var(--ash);text-align:center;line-height:1.6}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}.span8,.span6,.span4,.span5,.span7{grid-column:span 12}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+#refreshData.spinning{ animation:spin 0.8s linear infinite; }
+@keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+#statusBar.error{ color:#b23b2e; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <div class="mark">&#128230;</div>
+    <div>
+      <h1>Auschar Shipment Plan 2026</h1>
+      <div class="sub">Auschar product shipments &middot; co-manufactured by Longhi Group (Cavron) &middot; Heat Beads &amp; CharMate briquettes / lump charcoal</div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label for="cw">Current week</label>
+    <input id="cw" type="number" min="1" max="52" value="32">
+    <span style="font-size:11px;color:var(--ash)">10-week window</span>
+    <button id="refreshData" title="Reload from Google Sheets" style="border:1px solid var(--line); background:var(--card); border-radius:6px; width:28px; height:28px; cursor:pointer; color:var(--navy); font-size:14px;">&#8635;</button>
+  </div>
+</header>
+
+<div id="statusBar" style="text-align:center; padding:8px; font-size:12px; color:var(--ash);"></div>
+
+<div class="filterbar">
+  <span class="flab">Brand filter</span>
+  <div class="bseg" id="brandSeg">
+    <button data-b="all" class="on">All brands</button>
+    <button data-b="Heat Beads">Heat Beads</button>
+    <button data-b="CharMate">CharMate</button>
+    <button data-b="Other">Other</button>
+  </div>
+  <span id="brandInfo" style="font-size:12px;color:#cfe0f2;margin-left:auto"></span>
+</div>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+  <span style="font-size:11px;color:var(--ash);text-transform:uppercase;letter-spacing:.6px;font-weight:700">Summary</span>
+  <div class="seg" id="yearSeg">
+    <button data-y="2026" class="on">2026</button>
+    <button data-y="2027">2027</button>
+    <button data-y="all">All</button>
+  </div>
+</div>
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <div class="panel span5">
+    <div class="head"><div><h2>Sales Plan 2026 composition<span class="req">REQ 1</span></h2>
+      <div class="note" id="pieNote">Share of total order lines</div></div>
+      <div class="seg" id="pieSeg">
+        <button data-k="status" class="on">Status</button><button data-k="port">Destination</button>
+        <button data-k="month">Month</button><button data-k="raw">Type</button>
+      </div>
+    </div>
+    <div class="cv"><canvas id="pie"></canvas></div>
+  </div>
+  <div class="panel span7">
+    <div class="head"><div><h2>Order status across the 2026 plan<span class="req">REQ 2</span></h2>
+    <div class="note">Order lines stacked by status, per shipment month</div></div></div>
+    <div class="cv"><canvas id="stack"></canvas></div>
+  </div>
+
+  <div class="panel span6">
+    <div class="head"><div><h2>Shipment plan &mdash; next 10 weeks<span class="req">REQ 3</span></h2>
+    <div class="note" id="n3">Planned ETD per week</div></div>
+      <div class="seg" id="seg3"><button data-m="lines" class="on">Order lines</button>
+        <button data-m="weight">Weight (t)</button><button data-m="cont">Containers</button></div>
+    </div>
+    <div class="cv"><canvas id="next10"></canvas></div>
+  </div>
+  <div class="panel span6">
+    <div class="head"><div><h2>Booking status &mdash; next 10 weeks<span class="req">REQ 4</span></h2>
+    <div class="note">Maersk booking confirmed vs. not booked, per planned week</div></div></div>
+    <div class="cv"><canvas id="booking"></canvas></div>
+  </div>
+
+  <div class="panel span6">
+    <div class="head"><div><h2>Order status &mdash; next 10 weeks</h2>
+    <div class="note" id="n3b">Order lines stacked by status, per planned ETD week</div></div></div>
+    <div class="cv tall"><canvas id="stackNext10"></canvas></div>
+  </div>
+
+  <div class="panel span6">
+    <div class="head"><div><h2>ETD week by destination &mdash; next 10 weeks<span class="req">REQ 5</span></h2>
+    <div class="note" id="n5">Planned ETD week, stacked by port of arrival (ETA window)</div></div></div>
+    <div class="cv tall"><canvas id="eta"></canvas></div>
+  </div>
+
+  <div class="panel span12">
+    <div class="head"><div><h2>Stuffing plan &mdash; weight by product &times; week</h2>
+    <div class="note" id="wtnote">Sum of Total Weight (kg) &middot; On Hand + Packing + Finish Pack only &middot; next 10 weeks</div></div></div>
+    <div class="tblwrap"><div id="wtable"></div></div>
+  </div>
+
+  <div class="panel span6">
+    <div class="head"><div><h2>Orders by destination &mdash; confirmed orders only</h2><div class="note">Excludes Customer Forecast lines</div></div></div>
+    <div class="cv"><canvas id="dest"></canvas></div>
+  </div>
+  <div class="panel span6">
+    <div class="head"><div><h2>Planned volume by month</h2><div class="note">Total net weight (tonnes) per shipment month</div></div></div>
+    <div class="cv"><canvas id="vol"></canvas></div>
+  </div>
+
+  <div class="panel span7">
+    <div class="head"><div><h2>Top products in the plan</h2><div class="note">Order lines by product (short description)</div></div></div>
+    <div class="cv tall"><canvas id="prod"></canvas></div>
+  </div>
+  <div class="panel span5">
+    <div class="head"><div><h2>Destination mix by month</h2><div class="note">Order lines, stacked by port</div></div></div>
+    <div class="cv"><canvas id="destmonth"></canvas></div>
+  </div>
+
+  <div class="panel span12">
+    <div class="head"><div><h2>Cumulative shipment plan</h2><div class="note">Running total of containers across the planning weeks</div></div></div>
+    <div class="cv"><canvas id="cumul"></canvas></div>
+  </div>
+</div>
+
+<div class="foot">
+  Source: Shipment_Plan_Cavron_to_Auschar_-_2026 (Dashboard Week 32).xlsx &middot; Deliveryplan sheet &middot; 477 order lines &middot; data as of 3 August 2026 (W32)<br>
+  Products are Auschar brands (Heat Beads / CharMate) &middot; co-manufactured by Longhi Group (Cavron) &middot; containers from Container Count column &middot; visual style: Longhi Group
+</div>
+</div>
+
+<script>
+let DATA = [];
+const C={navy:'#1e3b5c',blue:'#83abd6',mid:'#4f6f99',ash:'#5B6B7B',grey:'#9aa6b2'};
+const STATUS_ORDER=['Customer Forecast','On Hand','Finish Pack','Packing','Send To Harbor'];
+const STATUS_COL={'Customer Forecast':'#c9ced4','On Hand':'#83abd6','Finish Pack':'#4f6f99','Packing':'#6b8db5','Send To Harbor':'#1e3b5c'};
+const PORTS=['Melbourne/VIC','Tauranga','Sydney/NSW','Brisbane/QLD','Fremantle/WA','Lyttelton','TBA'];
+const PORT_COL={'Melbourne/VIC':'#1e3b5c','Tauranga':'#83abd6','Sydney/NSW':'#4f6f99','Brisbane/QLD':'#aac3e0','Fremantle/WA':'#33547a','Lyttelton':'#6b8db5','TBA':'#c9d6e6'};
+const PIE_PALETTE=['#1e3b5c','#83abd6','#4f6f99','#aac3e0','#33547a','#6b8db5','#c9d6e6','#9aa6b2','#2b2b2b','#7d8a99'];
+const STUFF_STATUS=['On Hand','Packing','Finish Pack'];
+Chart.defaults.font.family='Calibri,Segoe UI,system-ui,sans-serif';Chart.defaults.font.size=12;Chart.defaults.color=C.ash;
+
+/* ===================== LIVE DATA PIPELINE ===================== */
+const DELIVERYPLAN_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTSFb8mibeLxtTRWAllYDxiUr6RT0ezSeMRxvEObufk-EIKTQjibnLq9R3d4hbQcDbIf9fvkbmm-TDK/pub?gid=301708942&single=true&output=csv';
+const BASE_MONDAY_UTC = Date.UTC(2025, 11, 29); // canonical Monday for week 1
+
+function canonicalMondayUTC(week){ return BASE_MONDAY_UTC + (week-1)*7*86400000; }
+
+// Convert Excel's serial date number (days since 1899-12-30) to a UTC ms timestamp.
+function excelSerialToUTC(serial){
+  const n = parseFloat(serial);
+  if(isNaN(n) || n===0) return null;
+  return Math.round((n - 25569) * 86400 * 1000);
+}
+
+async function fetchCsvRows(url, retries=2){
+  let lastErr;
+  for(let attempt=0; attempt<=retries; attempt++){
+    try{
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const text = await res.text();
+      const parsed = Papa.parse(text, {skipEmptyLines:false});
+      return parsed.data;
+    }catch(e){
+      lastErr = e;
+      if(attempt<retries) await new Promise(r=>setTimeout(r, 600*(attempt+1)));
+    }
+  }
+  throw lastErr;
+}
+
+// Column indices in the Deliveryplan CSV (0-based)
+const COL = {
+  po:0, status:1, week:7, month:8, year:10, port:18, product:20, raw:21,
+  weight:28, cc:29, brand:31, short:32, maersk:16, etaSerial:15
+};
+
+function parseDeliveryplanRows(rows){
+  let headerIdx = -1;
+  for(let i=0;i<rows.length;i++){
+    const cell = (rows[i][COL.po]||'').toString().trim();
+    if(cell === 'PO Number'){ headerIdx = i; break; }
+  }
+  if(headerIdx===-1) throw new Error('Header row (PO Number) not found');
+
+  const out = [];
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r || r.length===0) continue;
+    const po = (r[COL.po]||'').toString().trim();
+    if(!po) continue;
+
+    let status = (r[COL.status]||'').toString().trim();
+    // Normalize casing against the known status list
+    const statusMatch = STATUS_ORDER.find(s => s.toLowerCase() === status.toLowerCase());
+    if(statusMatch) status = statusMatch;
+
+    const week = parseInt((r[COL.week]||'').toString().trim());
+    const month = parseInt((r[COL.month]||'').toString().trim());
+    const year = parseInt((r[COL.year]||'').toString().trim());
+    const port = (r[COL.port]||'').toString().trim();
+    const product = (r[COL.product]||'').toString().trim();
+    const raw = (r[COL.raw]||'').toString().trim();
+    const weight = parseFloat((r[COL.weight]||'0').toString().trim().replace(/,/g,'')) || 0;
+    const cc = parseFloat((r[COL.cc]||'0').toString().trim().replace(/,/g,'')) || 0;
+    let brand = (r[COL.brand]||'').toString().trim();
+    let short = (r[COL.short]||'').toString().trim();
+    if(!brand || brand==='#N/A') brand = 'Other';
+    if(!short) short = '#N/A';
+
+    const maersk = (r[COL.maersk]||'').toString().trim();
+    const booked = (maersk && maersk!=='0') ? 'Booked' : 'Not Booked';
+
+    let eta_week = null;
+    const etaUTC = excelSerialToUTC(r[COL.etaSerial]);
+    if(etaUTC!==null){
+      eta_week = 1 + Math.floor((etaUTC - BASE_MONDAY_UTC)/(7*86400000));
+    }
+
+    if(isNaN(week) || isNaN(month) || isNaN(year)) continue;
+
+    out.push({po, status, week, year, month, port, booked, weight, cc, product, short, raw, brand, eta_week});
+  }
+  return out;
+}
+
+const statusBar = document.getElementById('statusBar');
+const refreshBtn = document.getElementById('refreshData');
+
+async function loadData(){
+  refreshBtn.classList.add('spinning');
+  statusBar.className = '';
+  statusBar.textContent = 'Loading latest data from Google Sheets…';
+  try{
+    if(!DELIVERYPLAN_URL) throw new Error('No source URL configured');
+    const rows = await fetchCsvRows(DELIVERYPLAN_URL);
+    DATA = parseDeliveryplanRows(rows);
+    if(DATA.length===0) throw new Error('No rows parsed');
+    const now = new Date();
+    statusBar.textContent = 'Live data — ' + DATA.length + ' order lines — last refreshed ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    statusBar.className = 'error';
+    statusBar.textContent = 'Could not load data — check the Sheet is still published to web. (' + e.message + ')';
+    console.error('Failed to load Deliveryplan', e);
+  }
+  refreshBtn.classList.remove('spinning');
+  redrawAll();
+}
+refreshBtn.onclick = loadData;
+/* ================= END LIVE DATA PIPELINE ================= */
+
+
+let BRAND='all',YEAR='2026',c3mode='lines',pieKey='status';
+const fmt=n=>n.toLocaleString('en-US');
+const t1=n=>(n/1000).toLocaleString('en-US',{maximumFractionDigits:1});
+const isReal=r=>r.short&&r.short!=='#N/A';
+function fd(){return BRAND==='all'?DATA:DATA.filter(r=>r.brand===BRAND);}
+function f26(){return fd().filter(r=>r.year===2026);}
+function count(arr,key){const m={};arr.forEach(r=>{const k=r[key]==null?'(blank)':r[key];m[k]=(m[k]||0)+1});return m;}
+function sumcc(arr){return arr.reduce((a,r)=>a+(r.cc||0),0);}
+
+const baseBar={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#E8EDF3'},beginAtZero:true,ticks:{precision:0}}}};
+const stackOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:11,boxHeight:11,padding:12,usePointStyle:true,pointStyle:'rectRounded'}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#E8EDF3'},beginAtZero:true,ticks:{precision:0}}}};
+
+let cPie,cStack,cNext,cBook,cStackNext10,cEta,cDest,cVol,cProd,cDM,cCumul;
+function window10(){const cw=Math.max(1,Math.min(52,+document.getElementById('cw').value||26));const w=[];for(let i=0;i<10;i++)w.push(cw+i);return w;}
+
+function renderKpis(){
+  let src=BRAND==='all'?DATA:DATA.filter(r=>r.brand===BRAND);
+  if(YEAR!=='all')src=src.filter(r=>r.year===+YEAR);
+  const tot=src.length,on=src.filter(r=>r.status==='On Hand').length,sth=src.filter(r=>r.status==='Send To Harbor').length,cf=src.filter(r=>r.status==='Customer Forecast').length;
+  const wt=src.reduce((a,r)=>a+(r.weight||0),0),cont=sumcc(src);
+  const tag=YEAR==='all'?'all years':YEAR+' plan';
+  const k=[['',fmt(tot),'Order lines',tag],['a',t1(wt)+' t','Planned net weight',fmt(Math.round(wt))+' kg total'],
+    ['s',fmt(Math.round(cont)),'Containers','From Container Count'],['t',on,'On hand','Stock ready to ship'],
+    ['g',sth,'Send to harbor','Moving to port'],['s',cf,'Customer forecast',tot?Math.round(cf/tot*100)+'% of lines':'&mdash;']];
+  document.getElementById('kpis').innerHTML=k.map(x=>`<div class="kpi ${x[0]}"><div class="v">${x[1]}</div><div class="l">${x[2]}</div><div class="x">${x[3]}</div></div>`).join('');
+}
+
+const pieNotes={status:'Order lines by status',port:'Order lines by destination port',month:'Order lines by shipment month',raw:'Order lines by product type'};
+function drawPie(){
+  const src=f26();let m=count(src,pieKey);let ent=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(pieKey==='status')ent=STATUS_ORDER.filter(s=>m[s]).map(s=>[s,m[s]]);
+  if(pieKey==='month')ent=Object.entries(m).sort((a,b)=>a[0]-b[0]).map(e=>['M'+e[0],e[1]]);
+  const labels=ent.map(e=>e[0]),vals=ent.map(e=>e[1]);
+  const cols=pieKey==='status'?labels.map(l=>STATUS_COL[l]):pieKey==='port'?labels.map(l=>PORT_COL[l]||C.grey):labels.map((_,i)=>PIE_PALETTE[i%PIE_PALETTE.length]);
+  document.getElementById('pieNote').textContent=pieNotes[pieKey];
+  if(cPie)cPie.destroy();
+  cPie=new Chart(document.getElementById('pie'),{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:cols,borderColor:'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'52%',plugins:{legend:{position:'right',labels:{boxWidth:11,boxHeight:11,padding:9,usePointStyle:true,pointStyle:'rectRounded',font:{size:11}}},
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} (${(c.raw/vals.reduce((a,b)=>a+b)*100||0).toFixed(1)}%)`}}}}});
+}
+function drawStack(){const d=f26();const months=[...new Set(d.map(r=>r.month).filter(Boolean))].sort((a,b)=>a-b);
+  const ds=STATUS_ORDER.map(s=>({label:s,backgroundColor:STATUS_COL[s],data:months.map(mo=>d.filter(r=>r.month===mo&&r.status===s).length)}));
+  if(cStack)cStack.destroy();cStack=new Chart(document.getElementById('stack'),{type:'bar',data:{labels:months.map(m=>'M'+m),datasets:ds},options:stackOpt});}
+function drawStackNext10(){const d=f26(),weeks=window10();
+  const ds=STATUS_ORDER.map(s=>({label:s,backgroundColor:STATUS_COL[s],data:weeks.map(w=>d.filter(r=>r.week===w&&r.status===s).length)}));
+  document.getElementById('n3b').textContent='Order lines stacked by status, per planned ETD week (weeks '+weeks[0]+'\u2013'+weeks[9]+')';
+  if(cStackNext10)cStackNext10.destroy();cStackNext10=new Chart(document.getElementById('stackNext10'),{type:'bar',data:{labels:weeks.map(w=>'W'+w),datasets:ds},options:stackOpt});}
+function drawNext10(){const d=f26(),weeks=window10();let vals,lab,col;
+  if(c3mode==='lines'){vals=weeks.map(w=>d.filter(r=>r.week===w).length);lab='Order lines';col=C.navy;}
+  else if(c3mode==='weight'){vals=weeks.map(w=>Math.round(d.filter(r=>r.week===w).reduce((a,r)=>a+(r.weight||0),0)/1000));lab='Tonnes';col=C.blue;}
+  else{vals=weeks.map(w=>Math.round(sumcc(d.filter(r=>r.week===w))));lab='Containers';col=C.mid;}
+  document.getElementById('n3').textContent=lab+' planned per week (weeks '+weeks[0]+'\u2013'+weeks[9]+')';
+  if(cNext)cNext.destroy();cNext=new Chart(document.getElementById('next10'),{type:'bar',data:{labels:weeks.map(w=>'W'+w),datasets:[{label:lab,data:vals,backgroundColor:col,borderRadius:5,maxBarThickness:46}]},options:baseBar});}
+function drawBooking(){const d=f26(),weeks=window10();
+  const bk=weeks.map(w=>d.filter(r=>r.week===w&&r.booked==='Booked').length),nb=weeks.map(w=>d.filter(r=>r.week===w&&r.booked==='Not Booked').length);
+  if(cBook)cBook.destroy();cBook=new Chart(document.getElementById('booking'),{type:'bar',data:{labels:weeks.map(w=>'W'+w),datasets:[
+    {label:'Booked',data:bk,backgroundColor:C.navy,borderRadius:4},{label:'Not booked',data:nb,backgroundColor:'#c9ced4',borderRadius:4}]},options:stackOpt});}
+function drawEta(){const d=f26(),weeks=window10();const present=PORTS.filter(p=>d.some(r=>weeks.includes(r.week)&&r.port===p));
+  const ds=present.map(p=>({label:p,backgroundColor:PORT_COL[p]||C.grey,data:weeks.map(w=>d.filter(r=>r.week===w&&r.port===p).length)}));
+  document.getElementById('n5').textContent='Order lines by planned ETD week (weeks '+weeks[0]+'\u2013'+weeks[9]+'), stacked by destination';
+  if(cEta)cEta.destroy();cEta=new Chart(document.getElementById('eta'),{type:'bar',data:{labels:weeks.map(w=>'W'+w),datasets:ds},options:stackOpt});}
+function drawDest(){const confirmed=fd().filter(r=>r.status!=='Customer Forecast');const m=count(confirmed,'port');const ent=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(cDest)cDest.destroy();cDest=new Chart(document.getElementById('dest'),{type:'bar',data:{labels:ent.map(e=>e[0]),datasets:[{data:ent.map(e=>e[1]),backgroundColor:ent.map(e=>PORT_COL[e[0]]||C.grey),borderRadius:5,maxBarThickness:46}]},
+    options:{...baseBar,indexAxis:'y',scales:{x:{grid:{color:'#E8EDF3'},beginAtZero:true},y:{grid:{display:false}}}}});}
+function drawVol(){const d=f26();const months=[...new Set(d.map(r=>r.month).filter(Boolean))].sort((a,b)=>a-b);
+  const vals=months.map(mo=>Math.round(d.filter(r=>r.month===mo).reduce((a,r)=>a+(r.weight||0),0)/1000));
+  if(cVol)cVol.destroy();cVol=new Chart(document.getElementById('vol'),{type:'bar',data:{labels:months.map(m=>'M'+m),datasets:[{label:'Tonnes',data:vals,backgroundColor:C.blue,borderRadius:5,maxBarThickness:42}]},options:baseBar});}
+function drawProd(){const d=fd().filter(isReal);const m=count(d,'short');let ent=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(cProd)cProd.destroy();cProd=new Chart(document.getElementById('prod'),{type:'bar',data:{labels:ent.map(e=>e[0]),datasets:[{data:ent.map(e=>e[1]),backgroundColor:C.mid,borderRadius:5,maxBarThickness:24}]},
+    options:{...baseBar,indexAxis:'y',scales:{x:{grid:{color:'#E8EDF3'},beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:11}}}}}});}
+function drawDM(){const d=f26();const months=[...new Set(d.map(r=>r.month).filter(Boolean))].sort((a,b)=>a-b);const present=PORTS.filter(p=>d.some(r=>r.port===p));
+  const ds=present.map(p=>({label:p,backgroundColor:PORT_COL[p]||C.grey,data:months.map(mo=>d.filter(r=>r.month===mo&&r.port===p).length)}));
+  if(cDM)cDM.destroy();cDM=new Chart(document.getElementById('destmonth'),{type:'bar',data:{labels:months.map(m=>'M'+m),datasets:ds},options:stackOpt});}
+function drawCumul(){const d=f26();const weeks=[...new Set(d.map(r=>r.week).filter(Boolean))].sort((a,b)=>a-b);
+  let run=0;const vals=weeks.map(w=>{run+=sumcc(d.filter(r=>r.week===w));return Math.round(run);});
+  if(cCumul)cCumul.destroy();cCumul=new Chart(document.getElementById('cumul'),{type:'line',data:{labels:weeks.map(w=>'W'+w),datasets:[{label:'Cumulative containers',data:vals,borderColor:C.navy,backgroundColor:'rgba(30,59,92,.10)',fill:true,tension:.25,pointRadius:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#E8EDF3'},beginAtZero:true}}}});}
+
+// NEW: stuffing plan table (weight by product x week, On Hand/Packing/Finish Pack)
+function drawWeekTable(){
+  const weeks=window10();
+  const d=fd().filter(r=>STUFF_STATUS.includes(r.status)&&isReal(r)&&weeks.includes(r.week));
+  const prods=[...new Set(d.map(r=>r.short))];
+  const colTot=weeks.map(()=>0);let gtot=0;
+  let body=prods.map(p=>{const cells=weeks.map(w=>d.filter(r=>r.short===p&&r.week===w).reduce((a,r)=>a+(r.weight||0),0));
+    const rtot=cells.reduce((a,b)=>a+b,0);cells.forEach((v,i)=>colTot[i]+=v);gtot+=rtot;return {p,cells,rtot};})
+    .filter(r=>r.rtot>0).sort((a,b)=>b.rtot-a.rtot);
+  const f=v=>v?Math.round(v).toLocaleString('en-US'):'';
+  document.getElementById('wtnote').textContent='Sum of Total Weight (kg) \u00b7 On Hand + Packing + Finish Pack only \u00b7 weeks '+weeks[0]+'\u2013'+weeks[9];
+  if(!body.length){document.getElementById('wtable').innerHTML='<div style="color:var(--ash);font-size:12px;padding:14px 2px">No On Hand / Packing / Finish Pack orders in this window for the selected brand.</div>';return;}
+  let h='<table class="wt"><thead><tr><th class="pl">Product</th>'+weeks.map(w=>'<th>W'+w+'</th>').join('')+'<th class="gt">Grand Total</th></tr></thead><tbody>';
+  body.forEach(r=>{h+='<tr><td class="pl">'+r.p+'</td>'+r.cells.map(v=>'<td>'+f(v)+'</td>').join('')+'<td class="gt">'+f(r.rtot)+'</td></tr>';});
+  h+='</tbody><tfoot><tr><td class="pl">Grand Total</td>'+colTot.map(v=>'<td>'+f(v)+'</td>').join('')+'<td>'+f(gtot)+'</td></tr></tfoot></table>';
+  document.getElementById('wtable').innerHTML=h;
+}
+
+function brandInfo(){const d=fd();document.getElementById('brandInfo').textContent=d.length+' lines \u00b7 '+Math.round(sumcc(d))+' containers \u00b7 '+t1(d.reduce((a,r)=>a+(r.weight||0),0))+' t';}
+function redrawAll(){renderKpis();drawPie();drawStack();drawNext10();drawBooking();drawStackNext10();drawEta();drawWeekTable();drawDest();drawVol();drawProd();drawDM();drawCumul();brandInfo();}
+
+document.querySelectorAll('#brandSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#brandSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');BRAND=b.dataset.b;redrawAll();});
+document.querySelectorAll('#yearSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#yearSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');YEAR=b.dataset.y;renderKpis();});
+document.querySelectorAll('#pieSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#pieSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');pieKey=b.dataset.k;drawPie();});
+document.querySelectorAll('#seg3 button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#seg3 button').forEach(x=>x.classList.remove('on'));b.classList.add('on');c3mode=b.dataset.m;drawNext10();});
+document.getElementById('cw').addEventListener('input',()=>{drawNext10();drawBooking();drawStackNext10();drawEta();drawWeekTable();});
+loadData();
+</script>
+</body>
+</html>
